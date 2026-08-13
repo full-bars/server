@@ -69,6 +69,11 @@ double-pay case the canceler's own log comment names. Live data shows the
 triggering state is not rare: two of six transfers in one batch never reached
 completed.
 
+The reporter has also heard the identical symptom (a payment disappearing from
+the list after it appeared paid) from at least two other providers; this issue is
+filed from the one account measured above, and those reports are not included as
+evidence here.
+
 ## Suggested fix
 
 Primary: never auto-cancel a payment with payment_record set; reconcile it
