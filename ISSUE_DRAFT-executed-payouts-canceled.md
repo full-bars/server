@@ -20,7 +20,7 @@ Account wallet: `BXqg85kyR4iMJjJwoPGZWfoPtdmoTTDE22drdmYPiLH8` (Solana, USDC pay
   the row read as paid while still marked Pending, and the transfer did land
   (on-chain proof below).
 
-  ![Payout rows 66-70: the arrows mark the two payments that landed on-chain but are still shown as Pending with no transaction hash ($47.80 row 69 and $72.07 row 67); the purple ~$ rows are unpaid estimates; row 66 is a completed payment with a transaction hash](https://github.com/full-bars/server/raw/draft/hung-payout-issue/payout-row-evidence.png)
+  ![Payout rows 66-70: the arrows mark the two payments that landed on-chain but are still shown as Pending with no transaction hash ($47.80 row 69 and $72.07 row 67); the purple ~$ rows are unpaid estimates; row 66 is a completed payment with a transaction hash](https://github.com/full-bars/server/raw/draft/hung-payout-issue/payout-evidence-annotated.png)
 
   *The arrows mark the two payments that already landed on-chain but are still
   shown as Pending with no transaction hash. The purple "~$" rows are unpaid
