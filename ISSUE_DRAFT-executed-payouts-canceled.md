@@ -14,9 +14,13 @@ My provider account had a $72.07 payout visible as pending on 2026-08-09 and gon
 Account wallet: `BXqg85kyR4iMJjJwoPGZWfoPtdmoTTDE22drdmYPiLH8` (Solana, USDC payouts).
 
 - 2026-08-09: 71 payments, including a pending $72.07 / 253.27 GB / 29,537 points
-  row. It was marked Pending even though the transfer had already gone out
-  on-chain (transaction below): the payment was real and landed, the pending
-  marker was stale.
+  row (screenshot below). The row had no transaction ID ("–"), but the amount was
+  green and exact ("$72.07 USDC"); in this UI, unpaid pending payments show a
+  purple "~$" estimate and only turn green once the payment has gone through. So
+  the row read as paid while still marked Pending, and the transfer did land
+  (on-chain proof below).
+
+  ![The $72.07 payment row: green exact amount, no transaction link, still marked Pending, next to a completed payment that does show a transaction hash](https://github.com/full-bars/server/raw/draft/hung-payout-issue/payout-row-evidence.png)
 - 2026-08-13: 70 payments. That row is gone; no canceled row appears in its place.
 - On-chain, the same wallet shows the transfer completed:
   https://solscan.io/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
