@@ -12,12 +12,12 @@ successfully on-chain but never flipped to completed therefore sees the payment
 disappear from the app with no status, no notification, and no row in the API
 response, while the lifetime total drops by that payment's amount.
 
-All measurements below are from a single provider account, the reporter's own:
-wallet `BXqg85kyR4iMJjJwoPGZWfoPtdmoTTDE22drdmYPiLH8` (Solana, USDC). The account
-showed 71 payments on 2026-08-09 and 70 on 2026-08-13; the missing row was
-$72.07 / 253.27 GB / 29,537 points / 13,314 reliability. The wallet balance
-confirms the transfer landed on-chain at 2026-08-02T06:07:00Z (USDC +72.070077,
-tx `UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ`).
+All measurements below are from my own provider account: wallet
+`BXqg85kyR4iMJjJwoPGZWfoPtdmoTTDE22drdmYPiLH8` (Solana, USDC). My account showed
+71 payments on 2026-08-09 and 70 on 2026-08-13; the missing row was $72.07 /
+253.27 GB / 29,537 points / 13,314 reliability. The wallet balance confirms the
+transfer landed on-chain at 2026-08-02T06:07:00Z (USDC +72.070077, tx
+`UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ`).
 The server's copy had token_amount and payment_time set but tx_hash empty: the
 transfer executed out of band and completion was never recorded.
 
@@ -31,7 +31,7 @@ transfer executed out of band and completion was never recorded.
 
 ## Reproduction
 
-- GET /account/payments on the reporter's account: 71 payments (2026-08-09) -> 70
+- GET /account/payments on my account: 71 payments (2026-08-09) -> 70
   (2026-08-13); the 253.27 GB row is absent from the later response.
 - The landed transfer for the missing row:
   https://explorer.solana.com/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
@@ -69,9 +69,9 @@ double-pay case the canceler's own log comment names. Live data shows the
 triggering state is not rare: two of six transfers in one batch never reached
 completed.
 
-The reporter has also heard the identical symptom (a payment disappearing from
-the list after it appeared paid) from at least two other providers; this issue is
-filed from the one account measured above, and those reports are not included as
+I have also heard the identical symptom (a payment disappearing from the list
+after it appeared paid) from at least two other providers; this issue is filed
+from the one account measured above, and those reports are not included as
 evidence here.
 
 ## Suggested fix
