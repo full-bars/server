@@ -90,6 +90,4 @@ Tertiary: surface canceled payments to clients so removal is never silent.
 > [!IMPORTANT]
 > The tradeoff is on the double-pay side. Auto-canceling keeps the ledger moving
 > but can pay the same bytes twice; reconcile-before-cancel risks a stuck payment
-> if verification cannot run. Happy to send a patch in either direction,
-> including removing the payment_record arm of the canceler and leaving those
-> payments pending for manual review.
+> if verification cannot run.
