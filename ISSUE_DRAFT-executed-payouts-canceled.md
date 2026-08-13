@@ -7,7 +7,13 @@ Title: Hung-payment canceler removes payments whose transfer already landed on-c
 My provider account had a $72.07 payout that was visible as pending on 2026-08-09 and gone from `/account/payments` by 2026-08-13. The wallet's on-chain history shows the transfer landed at 2026-08-02T06:07:00Z (USDC +72.070077, tx below). The server side never recorded completion for it: `tx_hash` stayed empty and `completed` stayed false. `CancelHungAccountPayments` (`model/account_payment_model.go:698`) cancels any payment where `NOT completed AND NOT canceled AND create_time < now()-30d`, with no check of whether the transfer's `payment_record` was ever set or whether the money moved. `GetNetworkPayments` (`model/account_payment_model.go:787`) filters `canceled = false`, so once the sweep fires the row disappears from the API entirely, with no canceled-status row, no notification, and the account total silently drops by that amount.
 
 > [!NOTE]
-> This is new code, not an old regression that only recently got scheduled. Both `CancelHungAccountPayments` and its 24h self-rescheduling task were added together in commit `bb4d0676` (2026-07-12), which is in main. I initially assumed (based on an unrelated May 2025 commit that also touches payment cancellation, `urnetwork/server#231`) that the canceler had existed for over a year as dead code; `git log -S` shows that's wrong; the function did not exist before `bb4d0676`. The sweep has only ever run since mid-July 2026, so the first wave of 30-day-old hung payments is only now hitting it.
+> This is new code: both `CancelHungAccountPayments` and its 24h self-rescheduling
+> task were added together in commit `bb4d0676` (2026-07-12), which is in main.
+> I initially assumed (based on an unrelated May 2025 commit that also touches
+> payment cancellation, `urnetwork/server#231`) that the canceler had existed for
+> over a year as dead code; `git log -S` shows that's wrong; the function did not
+> exist before `bb4d0676`. The sweep has only ever run since mid-July 2026, so the
+> first wave of 30-day-old hung payments is only now hitting it.
 
 ## Reproduction
 
