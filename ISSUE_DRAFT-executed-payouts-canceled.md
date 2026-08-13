@@ -1,4 +1,4 @@
-# Issue draft: urnetwork/server (v3, backticked refs, non-linking)
+# Issue draft: urnetwork/server (v4, account-attributed, with tx link)
 
 Title: Executed payouts are auto-canceled as "hung" and silently vanish from /account/payments
 
@@ -12,12 +12,14 @@ successfully on-chain but never flipped to completed therefore sees the payment
 disappear from the app with no status, no notification, and no row in the API
 response, while the lifetime total drops by that payment's amount.
 
-Measured on a provider account: 71 payments on 2026-08-09, 70 on 2026-08-13. The
-missing row was $72.07 / 253.27 GB / 29,537 points / 13,314 reliability. The
-payout wallet confirms the transfer landed on-chain at 2026-08-02T06:07:00Z
-(USDC +72.070077). The server's copy had token_amount and payment_time set but
-tx_hash empty: the transfer executed out of band and completion was never
-recorded.
+All measurements below are from a single provider account, the reporter's own:
+wallet `BXqg85kyR4iMJjJwoPGZWfoPtdmoTTDE22drdmYPiLH8` (Solana, USDC). The account
+showed 71 payments on 2026-08-09 and 70 on 2026-08-13; the missing row was
+$72.07 / 253.27 GB / 29,537 points / 13,314 reliability. The wallet balance
+confirms the transfer landed on-chain at 2026-08-02T06:07:00Z (USDC +72.070077,
+tx `UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ`).
+The server's copy had token_amount and payment_time set but tx_hash empty: the
+transfer executed out of band and completion was never recorded.
 
 > [!NOTE]
 > New behavior, not an old regression: the canceler model function dates to
@@ -29,12 +31,14 @@ recorded.
 
 ## Reproduction
 
-- GET /account/payments: 71 payments (2026-08-09) -> 70 (2026-08-13); the
-  253.27 GB row is absent from the later response.
-- A second payment is in the same state today: token_amount 47.80, payment_time
-  2026-08-02T07:18:18Z, completed false, tx_hash empty. Its create_time
-  (2026-07-26) means the canceler will remove it around 2026-08-25 unless the
-  completion path catches up first.
+- GET /account/payments on the reporter's account: 71 payments (2026-08-09) -> 70
+  (2026-08-13); the 253.27 GB row is absent from the later response.
+- The landed transfer for the missing row:
+  https://solflare.com/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
+- A second payment on the same account is in the same state today: token_amount
+  47.80, payment_time 2026-08-02T07:18:18Z, completed false, tx_hash empty. Its
+  create_time (2026-07-26) means the canceler will remove it around 2026-08-25
+  unless the completion path catches up first.
 - Points are not reversed by the cancel: the account total went 514,792.8
   (2026-08-05) -> 530,787.9 (2026-08-13) across the disappearance. Only the
   payment row vanishes; the points it earned stay credited, so a provider sees
