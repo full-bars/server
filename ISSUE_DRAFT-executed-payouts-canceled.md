@@ -34,7 +34,7 @@ transfer executed out of band and completion was never recorded.
 - GET /account/payments on the reporter's account: 71 payments (2026-08-09) -> 70
   (2026-08-13); the 253.27 GB row is absent from the later response.
 - The landed transfer for the missing row:
-  https://solflare.com/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
+  https://explorer.solana.com/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
 - A second payment on the same account is in the same state today: token_amount
   47.80, payment_time 2026-08-02T07:18:18Z, completed false, tx_hash empty. Its
   create_time (2026-07-26) means the canceler will remove it around 2026-08-25
