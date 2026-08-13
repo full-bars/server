@@ -1,4 +1,4 @@
-# Issue draft: urnetwork/server (v4, account-attributed, with tx link)
+# Issue draft: urnetwork/server (v6, corrected per independent review)
 
 Title: Executed payouts are auto-canceled as "hung" and silently vanish from /account/payments
 
@@ -22,39 +22,56 @@ The server's copy had token_amount and payment_time set but tx_hash empty: the
 transfer executed out of band and completion was never recorded.
 
 > [!NOTE]
-> New behavior, not an old regression: the canceler model function dates to
-> `urnetwork/server#231` (2025-05-22), but the task was never scheduled until
-> commit `bb4d0676` "performance optimizations and fixes" (2026-07-12, shipped in
-> the v2026.7.15 release). The sweep started running mid-July 2026, so providers
-> are only now hitting the 30-day arm. Related prior report:
-> `urnetwork/server#376`.
+> This is new code, not an old regression that only recently got scheduled. Both
+> `CancelHungAccountPayments` and the daily task that calls it were added
+> together in commit `bb4d0676` (2026-07-12, shipped in the v2026.7.15 release);
+> `git log -S` confirms the function did not exist before that commit. The sweep
+> has only ever run since mid-July 2026, so the first wave of 30-day-old hung
+> payments is only now hitting it. (An earlier May 2025 payment-fix,
+> `urnetwork/server#231`, adds the `CANCELLED` status arm in `advancePayment` and
+> is unrelated to this canceler.)
 
 ## Reproduction
 
 - GET /account/payments on my account: 71 payments (2026-08-09) -> 70
-  (2026-08-13); the 253.27 GB row is absent from the later response.
+  (2026-08-13); the 253.27 GB row is absent from the later response. I did not
+  capture the vanished row's payment_id before it disappeared, so the match to
+  the on-chain transfer is by exact amount, byte count, and date, not a database
+  lookup.
 - The landed transfer for the missing row:
   https://explorer.solana.com/tx/UAQjPZHhpVUJTjqgSct3AfNZwfoRFB71jmjjz3rfV4LPVywDz5jeoEjVwxXTazxfSeAWhBGwGbtHMHfEs4depRQ
-- A second payment on the same account is in the same state today: token_amount
-  47.80, payment_time 2026-08-02T07:18:18Z, completed false, tx_hash empty. Its
-  create_time (2026-07-26) means the canceler will remove it around 2026-08-25
-  unless the completion path catches up first.
-- Points are not reversed by the cancel: the account total went 514,792.8
-  (2026-08-05) -> 530,787.9 (2026-08-13) across the disappearance. Only the
-  payment row vanishes; the points it earned stay credited, so a provider sees
-  their points keep climbing while a payment built on those points disappears.
+- Because the row was present on 2026-08-09 and gone by 2026-08-13, and the sweep
+  runs daily on create_time < now()-30d, the vanished payment's create_time was
+  roughly 2026-07-10 to 07-14. The other pending rows have create_times in the
+  same era (`019f77ae` 2026-07-19, `019f9bbc` 2026-07-26).
+- A second payment on the same account is in the identical state:
+  `019f9bbc-893a-e8cb-76b6-edf9ac5adff1`, token_amount 47.80, payment_time
+  2026-08-02T07:18:18Z, completed false, tx_hash empty. Its create_time
+  (2026-07-26) means the canceler will remove it around 2026-08-25 unless the
+  completion path catches up first.
+- The new pending row that appeared on 2026-08-09 (`019fe526`, 224.85 GB) is not
+  a re-plan of the vanished payment: its byte count and min_sweep_time do not
+  match the 253.27 GB row, and it was created before the cancellation happened.
+- Points are not tied to a payment's fate: point crediting runs at payment-plan
+  creation (`applyPayoutPoints`, `model/account_payment_model_plan.go:956`),
+  independent of whether the payment later completes or is canceled. My account
+  total went 514,792.8 (2026-08-05) -> 530,787.9 (2026-08-13) across the
+  disappearance.
 
 ## Affected code (main @ `6af7e029`)
 
-- `model/account_payment_model.go:678` `CancelHungAccountPayments`: cancels every
+- `model/account_payment_model.go:698` `CancelHungAccountPayments`: cancels every
   row WHERE NOT completed AND NOT canceled AND create_time < now()-30d; only logs
   when payment_record was set ("audit the external transfer for double payout").
   Never checks whether the transfer landed.
-- `model/account_payment_model.go:805` `GetNetworkPayments`: WHERE ... canceled =
-  false, so canceled rows are invisible to every client.
+- `model/account_payment_model.go:787` `GetNetworkPayments`: WHERE ... canceled =
+  false (clause at :825), so canceled rows are invisible to every client.
 - `controller/account_payment_controller.go:217` `advancePayment`: completion is
   driven solely by the processor status flipping to COMPLETE; SENT/CONFIRMED is
-  polled indefinitely with no on-chain fallback and no timeout.
+  polled indefinitely with no on-chain fallback and no timeout. Its `CANCELLED`
+  status arm (:269) also cancels payments, but that path would mean the processor
+  marked a transfer that demonstrably landed on-chain as cancelled; the evidence
+  here points to the hung sweep, not a processor cancellation.
 - `model/account_payment_model.go:608` `CompletePayment`: guards NOT canceled, so
   a late confirmation after cancellation cannot complete the payment.
 
